@@ -1,5 +1,4 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import React, { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
@@ -9,96 +8,76 @@ import Section from 'components/Section/Section';
 import ContactForm from 'components/ContactForm/ContactForm';
 import ContactsList from 'components/ContactsList/ContactsList';
 import Filter from 'components/Filter/Filter';
+
 import initialContacts from 'components/data/contacts.json';
+import useLocalStorage from 'hooks/useLocalStorage';
 
-class App extends Component {
-  static defaultProps = {};
+export default function App() {
+  const [contacts, setContacts] = useLocalStorage('contacts', initialContacts);
+  const [filter, setFilter] = useState('');
 
-  static propTypes = {
-    contacts: PropTypes.array,
-    filter: PropTypes.string,
+  const contactDeleteHandler = contactId => {
+    setContacts(contacts.filter(contact => contact.id !== contactId));
+    Notify.success('Contact is deleted', {
+      fontSize: '16px',
+      width: '350px',
+    });
   };
 
-  state = {
-    contacts: initialContacts,
-    filter: '',
-  };
+  const formSubmitHandler = data => {
+    let contact = { id: nanoid(), name: data.name, number: data.number };
 
-  contactDeleteHandler = contactId => {
-    this.setState(
-      ({ contacts }) => ({
-        contacts: contacts.filter(contact => contact.id !== contactId),
-      }),
-      Notify.success('Contact is deleted', {
-        fontSize: '16px',
-        width: '350px',
-      })
-    );
-  };
-
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.contacts !== prevState.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-    }
-  }
-
-  formSubmitHandler = data => {
-    let id = nanoid();
-    let contact = { id: id, name: data.name, number: data.number };
-
-    let isContact = this.state.contacts.filter(contact =>
+    let isContactName = contacts.filter(contact =>
       contact.name.toLowerCase().includes(data.name.toLowerCase())
     );
-    console.log(isContact);
-    if (isContact.length) {
-      Notify.warning(`${data.name} is already in contacts`, {
+    let isContactNumber = contacts.filter(contact =>
+      contact.number.toLowerCase().includes(data.number.toLowerCase())
+    );
+
+    if (isContactName.length) {
+      Notify.warning(`Name ${data.name} is already in your contacts`, {
         background: '#eebf31',
         fontSize: '16px',
         width: '350px',
       });
       return;
     }
-    this.setState(prevState => ({
-      contacts: [...prevState.contacts, contact],
-    }));
+
+    if (isContactNumber.length) {
+      Notify.warning(`Number ${data.number} is already in your contacts`, {
+        background: '#eebf31',
+        fontSize: '16px',
+        width: '350px',
+      });
+      return;
+    }
+    setContacts(prevState => [...prevState, contact]);
   };
 
-  handleFilter = value => {
-    this.setState(() => ({
-      filter: value,
-    }));
+  const handleFilter = value => {
+    setFilter(value);
   };
 
-  getContacts = () => {
-    const { contacts, filter } = this.state;
+  const getFilteredContacts = () => {
     return contacts.filter(contact =>
       contact.name.toLowerCase().includes(filter.toLowerCase())
     );
   };
 
-  componentDidMount() {
-    const contacts = localStorage.getItem('contacts');
-    const parsedContacts = JSON.parse(contacts);
+  useEffect(() => {
+    window.localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
 
-    if (parsedContacts) {
-      this.setState({ contacts: parsedContacts });
-    }
-  }
-
-  render() {
-    return (
-      <PhonebookContainer>
-        <Title>Phonebook</Title>
-        <ContactForm onSubmit={this.formSubmitHandler} />
-        <Section title="Contacts"></Section>
-        <Filter filterByName={this.handleFilter} />
-        <ContactsList
-          contacts={this.getContacts()}
-          onDelete={this.contactDeleteHandler}
-        />
-      </PhonebookContainer>
-    );
-  }
+  return (
+    <PhonebookContainer>
+      <Title>Phonebook</Title>
+      <ContactForm onSubmit={formSubmitHandler} />
+      <Section title="Contacts"></Section>
+      <Filter filterByName={handleFilter} />
+      <ContactsList
+        contacts={getFilteredContacts()}
+        onDelete={contactDeleteHandler}
+      />
+    </PhonebookContainer>
+  );
 }
-
-export default App;

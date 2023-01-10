@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { nanoid } from 'nanoid';
 import {
   FormContainer,
@@ -60,3 +61,9 @@ export default function ContactForm({ onSubmit }) {
     </FormContainer>
   );
 }
+
+ContactForm.propTypes = {
+  contacts: PropTypes.array,
+  name: PropTypes.string,
+  number: PropTypes.string,
+};

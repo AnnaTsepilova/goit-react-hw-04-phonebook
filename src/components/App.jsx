@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { nanoid } from 'nanoid';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
@@ -81,3 +82,12 @@ export default function App() {
     </PhonebookContainer>
   );
 }
+
+App.propTypes = {
+  contacts: PropTypes.array,
+  filter: PropTypes.string,
+  contactDeleteHandler: PropTypes.func,
+  formSubmitHandler: PropTypes.func,
+  handleFilter: PropTypes.func,
+  getFilteredContacts: PropTypes.func,
+};

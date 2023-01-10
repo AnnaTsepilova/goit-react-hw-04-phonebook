@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 
 export default function useLocalStorage(key, defaultValue) {
   const [state, setState] = useState(() => {
@@ -11,3 +12,8 @@ export default function useLocalStorage(key, defaultValue) {
 
   return [state, setState];
 }
+
+useLocalStorage.propTypes = {
+  key: PropTypes.number.isRequired,
+  defaultValue: PropTypes.string.isRequired,
+};
